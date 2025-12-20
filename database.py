@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import logging
 from datetime import datetime, timedelta
 import pymongo
@@ -719,6 +719,26 @@ class EnhancedDatabaseManager:
             logger.error(f"Failed to set broadcast state for {user_id}: {e}")
             raise
 
+    def start_broadcast(self, user_id):
+        """Start broadcast for a user."""
+        try:
+            self.set_broadcast_state(user_id, running=True, paused=False)
+            logger.info(f"Broadcast started for user {user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to start broadcast for {user_id}: {e}")
+            raise
+
+    def stop_broadcast(self, user_id):
+        """Stop broadcast for a user."""
+        try:
+            self.set_broadcast_state(user_id, running=False, paused=False)
+            logger.info(f"Broadcast stopped for user {user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to stop broadcast for {user_id}: {e}")
+            raise
+
     def increment_broadcast_cycle(self, user_id):
         """Increment the broadcast cycle count for a user and update cycle index for message rotation."""
         try:
@@ -959,18 +979,26 @@ class EnhancedDatabaseManager:
     def get_logger_status(self, user_id):
         """Check if user has started the logger bot."""
         try:
-            doc = self.db.logger_status.find_one({"user_id": user_id}, {"is_active": 1})
-            return doc.get("is_active", False) if doc else False
+            doc = self.db.logger_status.find_one({"user_id": user_id}, {"is_active": 1, "is_started": 1})
+            if doc:
+                # Support both 'is_active' and 'is_started' keys for compatibility
+                is_started = doc.get("is_started", doc.get("is_active", False))
+                return {"is_started": is_started, "is_active": is_started}
+            return {"is_started": False, "is_active": False}
         except Exception as e:
             logger.error(f"Failed to get logger status for {user_id}: {e}")
-            return False
+            return {"is_started": False, "is_active": False}
 
     def set_logger_status(self, user_id, is_active=True):
         """Mark if user has started the logger bot."""
         try:
             self.db.logger_status.update_one(
                 {"user_id": user_id},
-                {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}},
+                {"$set": {
+                    "is_active": is_active, 
+                    "is_started": is_active,  # Support both keys for web dashboard compatibility
+                    "updated_at": datetime.utcnow()
+                }},
                 upsert=True
             )
             logger.info(f"Logger status set for {user_id}: is_active={is_active}")
