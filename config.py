@@ -20,9 +20,8 @@ UPDATES_CHANNEL_URL = f"https://t.me/{UPDATES_CHANNEL}"
 SUPPORT_GROUP_URL = "https://t.me/AzTechDeveloper"
 GUIDE_URL = "https://t.me/AzTechsGC"
 
-# Web Dashboard - For Render.com deployment
-# Render automatically provides RENDER_EXTERNAL_URL environment variable
-DASHBOARD_URL = os.getenv("RENDER_EXTERNAL_URL", os.getenv("DASHBOARD_URL", ""))
+# Web Dashboard - Render.com URL (PERMANENT!)
+DASHBOARD_URL = os.getenv("DASHBOARD_URL", "https://azweb-dibv.onrender.com")
 
 # Admin Configuration - Multiple admins supported
 ADMIN_ID = 6670166083  # Primary admin user ID
